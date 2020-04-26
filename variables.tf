@@ -3,9 +3,9 @@ variable "vpc_id" {
 }
 
 variable "name" {
-    default = "eng54-Maksaud-app-tf"
+    default = "eng54-Maksaud-node-app-tf"
 }
 
 variable "ami" {
-    default = ""
+    default = "ami-0a4db0cd882d67374"
 }

@@ -17,7 +17,7 @@ provider "aws" {
 # move instance into subnet
 resource "aws_subnet" "app_subnet" {
     vpc_id = var.vpc_id
-    cidr_block = "172.31.85.0/24"
+    cidr_block = "172.31.62.0/24"
     availability_zone = "eu-west-1a"
     tags = {
         Name = var.name
@@ -55,49 +55,71 @@ data "aws_internet_gateway" "default-gw" {
   
 }
 
-
 # Launching an instance
 resource "aws_instance" "app_instance" {
     ami = var.ami
     instance_type = "t2.micro"
     associate_public_ip_address = true
     subnet_id = aws_subnet.app_subnet.id
-    vpc_security_group_ids = [aws_security_group.allow_port80.id]
+    vpc_security_group_ids = [aws_security_group.maksaud_security_group.id]
     tags = {
         Name = var.name
     }
     key_name = "maksaud-eng54"
+
+    # starting the app
+    provisioner "remote-exec" {
+        inline = ["cd /home/ubuntu/app", "sudo npm install", "npm start"]
+    }
+
+    connection {
+        type = "ssh"
+        user = "ubuntu"
+        private_key = "${file("~/.ssh/maksaud-eng54.pem")}"
+        host = self.public_ip
+    }
 }
 
-resource "aws_security_group" "allow_port80" {
-  name        = "Maksaud-eng54-security-group"
-  description = "Allow port 80 inbound traffic"
-  vpc_id      = "vpc-07e47e9d90d2076da"
+resource "aws_security_group" "maksaud_security_group" {
+    name        = "Maksaud-eng54-node-security-group"
+    description = "Allow port 80 inbound traffic"
+    vpc_id      = var.vpc_id
 
-  ingress {
+    ingress {
     description = "port 80 from VPC"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
+    }
 
-  ingress {
+    ingress {
     description = "port 22 from VPC"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["90.207.145.147/32"]
-  }
+    cidr_blocks = ["0.0.0.0/0"]
+    }
 
-  egress {
+    ingress {
+    description = "port 3000 from VPC"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
+    }
 
-  tags = {
-    Name = "Maksaud-eng54-security-group"
-  }
+    tags = {
+    Name = "Maksaud-eng54-node-security-group"
+    }
 }
+
+
+
