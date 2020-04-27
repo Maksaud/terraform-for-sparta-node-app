@@ -2,13 +2,24 @@ provider "aws" {
     region = "eu-west-1"
 }
 
-# create a VPC
-#resource "aws_vpc" "app_vpc" {
-#    cidr_block = "10.0.0.0/16"
-#    tags = {
-#        Name = "Maksaud-eng54-app_vpc"
-#    }
-#}
+#create a VPC
+resource "aws_vpc" "app_vpc" {
+   cidr_block = "10.0.0.0/16"
+   tags = {
+       Name = "${var.name}-vpc"
+   }
+}
+
+# Create internet gateway
+resource "aws_internet_gateway" "igw" {
+    vpc_id = aws_vpc.app_vpc.id
+
+    tags = {
+        Name = "${var.name}-ig"
+    }
+  
+}
+
 
 #### create app tier
 # Use devops vpc
@@ -16,25 +27,13 @@ provider "aws" {
 # Create new subnet
 # move instance into subnet
 
-
-
-
-# We don't need a new IG -
-# We can query our exist vpc/infrastructure with the 'data' handler/function
-data "aws_internet_gateway" "default-gw" {
-    filter {
-        name = "attachment.vpc-id"
-        values = [var.vpc_id]
-    }
-  
-}
-
+# Create app tier with all veriables we pass to it
 module "app" {
     source = "./modules/app_tier"
-    vpc_id = var.vpc_id
+    vpc_id = aws_vpc.app_vpc.id
     name = var.name
     ami = var.ami
-    internet_gateway = data.aws_internet_gateway.default-gw.id
+    internet_gateway = aws_internet_gateway.igw.id
 }
 
 
