@@ -3,7 +3,7 @@
 
 resource "aws_subnet" "app_subnet" {
     vpc_id = var.vpc_id
-    cidr_block = "172.31.62.0/24"
+    cidr_block = "172.31.94.0/24"
     availability_zone = "eu-west-1a"
     tags = {
         Name = var.name

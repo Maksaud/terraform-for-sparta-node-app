@@ -34,7 +34,7 @@ module "app" {
     vpc_id = var.vpc_id
     name = var.name
     ami = var.ami
-    internet_gateway = var.internet_gateway
+    internet_gateway = data.aws_internet_gateway.default-gw.id
 }
 
 
