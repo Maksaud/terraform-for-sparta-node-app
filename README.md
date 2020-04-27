@@ -63,10 +63,7 @@ resource "aws_instance" "app_instance" {
     }
     key_name = "maksaud-eng54"
 
-    # starting the app
-    provisioner "remote-exec" {
-        inline = ["cd /home/ubuntu/app", "sudo npm install", "pm2 start app.js"]
-    }
+    user_data = data.template_file.app_init.rendered
 
     connection {
         type = "ssh"
