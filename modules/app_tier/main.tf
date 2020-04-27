@@ -31,6 +31,12 @@ resource "aws_route_table_association" "assoc" {
 
 data "template_file" "app_init" {
     template = "${file("./scripts/app/init.sh.tpl")}"
+        vars = {
+            my_name = "${var.name} is the real maksaud"
+        }
+        # setting ports
+        # for mongo db, setting private_op for db host
+            # AWS gives
 }
 
 # Launching the app instance instance
