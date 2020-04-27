@@ -1,10 +1,8 @@
-# App tier
-# Move here anything to do with the app tier creation
+# DB tier
 
-# Subnet
-resource "aws_subnet" "app_subnet" {
+resource "aws_subnet" "maksaud_private_subnet" {
     vpc_id = var.vpc_id
-    cidr_block = "10.0.1.0/24"
+    cidr_block = "10.0.2.0/24"
     availability_zone = "eu-west-1a"
     tags = {
         Name = "${var.name}-subnet"
@@ -12,9 +10,9 @@ resource "aws_subnet" "app_subnet" {
 }
 
 # Creating NACLs
-resource "aws_network_acl" "maksaud-public-nacl" {
+resource "aws_network_acl" "maksaud-eng54-private-nacl" {
     vpc_id = var.vpc_id
-    subnet_ids = [aws_subnet.app_subnet.id]
+    subnet_ids = [aws_subnet.maksaud_private_subnet.id]
 
     ingress {
         protocol = "tcp"
@@ -39,8 +37,8 @@ resource "aws_network_acl" "maksaud-public-nacl" {
         rule_no = 120
         action = "allow"
         cidr_block = "0.0.0.0/0"
-        from_port = 3000
-        to_port = 3000
+        from_port = 27017
+        to_port = 27017
     }
 
     ingress {
@@ -56,7 +54,7 @@ resource "aws_network_acl" "maksaud-public-nacl" {
         protocol = "tcp"
         rule_no = 140
         action = "allow"
-        cidr_block = "90.207.145.147/32"
+        cidr_block = "90.207.145.147/32" # Change to bastion
         from_port = 22
         to_port = 22
     }
@@ -79,8 +77,8 @@ resource "aws_network_acl" "maksaud-public-nacl" {
 
 
 # Creating Security group
-resource "aws_security_group" "maksaud_security_group" {
-    name        = "Maksaud-eng54-node-security-group"
+resource "aws_security_group" "maksaud_db_security_group" {
+    name        = "maksaud_db_security_group"
     description = "Allow port 80 inbound traffic"
     vpc_id      = var.vpc_id
 
@@ -94,8 +92,8 @@ resource "aws_security_group" "maksaud_security_group" {
 
     ingress {
     description = "port 80 from VPC"
-    from_port   = 443
-    to_port     = 443
+    from_port   = 27017
+    to_port     = 27017
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     }
@@ -105,15 +103,7 @@ resource "aws_security_group" "maksaud_security_group" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["90.207.145.147/32"]
-    }
-
-    ingress {
-    description = "port 3000 from VPC"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["90.207.145.147/32"] # Change to bastion
     }
 
     egress {
@@ -124,12 +114,12 @@ resource "aws_security_group" "maksaud_security_group" {
     }
 
     tags = {
-        Name = "Maksaud-eng54-node-security-group"
+        Name = "maksaud_db_security_group"
     }
 }
 
 # Route table
-resource "aws_route_table" "public" {
+resource "aws_route_table" "private-route" {
     vpc_id = var.vpc_id
     route {
         cidr_block = "0.0.0.0/0"
@@ -143,38 +133,26 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "assoc" {
-    subnet_id = aws_subnet.app_subnet.id
-    route_table_id = aws_route_table.public.id
+    subnet_id = aws_subnet.maksaud_private_subnet.id
+    route_table_id = aws_route_table.private-route.id
 }
 
-data "template_file" "app_init" {
-    template = "${file("./scripts/app/init.sh.tpl")}"
-        vars = {
-            my_name = "${var.name} is the real maksaud"
-        }
-        # setting ports
-        # for mongo db, setting private_op for db host
-            # AWS gives
-}
+# Launching the db instance ready to be inserted
+# resource "aws_instance" "db_instance" {
+#     ami = var.db_ami
+#     instance_type = "t2.micro"
+#     associate_public_ip_address = true # I assume I dont need this
+#     subnet_id = aws_subnet.maksaud_private_subnet.id
+#     vpc_security_group_ids = [aws_security_group.maksaud_db_security_group.id]
+#     tags = {
+#         Name = var.name
+#     }
+#     key_name = "maksaud-eng54"
 
-# Launching the app instance instance
-resource "aws_instance" "app_instance" {
-    ami = var.ami
-    instance_type = "t2.micro"
-    associate_public_ip_address = true
-    subnet_id = aws_subnet.app_subnet.id
-    vpc_security_group_ids = [aws_security_group.maksaud_security_group.id]
-    tags = {
-        Name = var.name
-    }
-    key_name = "maksaud-eng54"
-
-    user_data = data.template_file.app_init.rendered
-
-    connection {
-        type = "ssh"
-        user = "ubuntu"
-        private_key = "${file("~/.ssh/maksaud-eng54.pem")}"
-        host = self.public_ip
-    }
-}
+#     # connection {
+#     #     type = "ssh"
+#     #     user = "ubuntu"
+#     #     private_key = "${file("~/.ssh/maksaud-eng54.pem")}"
+#     #     host = self.public_ip
+#     # }
+# }

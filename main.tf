@@ -20,7 +20,6 @@ resource "aws_internet_gateway" "igw" {
   
 }
 
-
 #### create app tier
 # Use devops vpc
     # vpc-07e47e9d90d2076da
@@ -33,6 +32,14 @@ module "app" {
     vpc_id = aws_vpc.app_vpc.id
     name = var.name
     ami = var.ami
+    internet_gateway = aws_internet_gateway.igw.id
+}
+
+module "db" {
+    source = "./modules/db_tier"
+    vpc_id = aws_vpc.app_vpc.id
+    name = var.name
+    #db_ami = var.db_ami
     internet_gateway = aws_internet_gateway.igw.id
 }
 
