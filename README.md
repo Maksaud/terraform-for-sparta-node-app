@@ -65,7 +65,7 @@ resource "aws_instance" "app_instance" {
 
     # starting the app
     provisioner "remote-exec" {
-        inline = ["cd /home/ubuntu/app", "sudo npm install", "npm start"]
+        inline = ["cd /home/ubuntu/app", "sudo npm install", "pm2 start app.js"]
     }
 
     connection {

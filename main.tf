@@ -43,6 +43,9 @@ resource "aws_route_table_association" "assoc" {
     route_table_id = aws_route_table.public.id
 }
 
+data "template_file" "app_init" {
+    template = "${file("./scripts/app/init.sh.tpl")}"
+}
 
 
 # We don't need a new IG -
@@ -67,10 +70,7 @@ resource "aws_instance" "app_instance" {
     }
     key_name = "maksaud-eng54"
 
-    # starting the app
-    provisioner "remote-exec" {
-        inline = ["cd /home/ubuntu/app", "sudo npm install", "npm start"]
-    }
+    user_data = data.template_file.app_init.rendered
 
     connection {
         type = "ssh"
