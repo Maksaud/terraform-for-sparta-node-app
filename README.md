@@ -48,7 +48,7 @@ variable "name" {
 
 ## main.tf
 
-This file is used to run the main code for the terraform.
+This file is used to run the main code for the terraform. For example:
 
 ```terraform
 # Creating instance from ami
@@ -76,6 +76,8 @@ resource "aws_instance" "app_instance" {
     }
 }
 ```
+
+This is the block of terraform code that creates an EC2 instance from an ami with certain configurations.
 
 ## initialise working directory
 
