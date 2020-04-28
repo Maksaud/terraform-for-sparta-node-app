@@ -7,5 +7,5 @@ variable "ami" {
 }
 
 variable "db_ami" {
-    default = "ami-004a1e4b2de453f4c"
+    default = "ami-026c55a0302da2409"
 }

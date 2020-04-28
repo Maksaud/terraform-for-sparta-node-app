@@ -149,7 +149,7 @@ resource "aws_route_table_association" "assoc" {
 resource "aws_instance" "db_instance" {
     ami = var.db_ami
     instance_type = "t2.micro"
-    associate_public_ip_address = false
+    associate_public_ip_address = true # Change to
     subnet_id = aws_subnet.maksaud_private_subnet.id
     vpc_security_group_ids = [aws_security_group.maksaud_db_security_group.id]
     tags = {
