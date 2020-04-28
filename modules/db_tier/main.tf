@@ -60,7 +60,7 @@ resource "aws_network_acl" "maksaud-eng54-private-nacl" {
     }
     
     egress {
-        protocol   = "tcp"
+        protocol   = "-1"
         rule_no    = 100
         action     = "allow"
         cidr_block = "0.0.0.0/0"
@@ -86,6 +86,14 @@ resource "aws_security_group" "maksaud_db_security_group" {
     description = "port 80 from VPC"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+    description = "port 80 from VPC"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     }
@@ -137,22 +145,22 @@ resource "aws_route_table_association" "assoc" {
     route_table_id = aws_route_table.private-route.id
 }
 
-# Launching the db instance ready to be inserted
-# resource "aws_instance" "db_instance" {
-#     ami = var.db_ami
-#     instance_type = "t2.micro"
-#     associate_public_ip_address = true # I assume I dont need this
-#     subnet_id = aws_subnet.maksaud_private_subnet.id
-#     vpc_security_group_ids = [aws_security_group.maksaud_db_security_group.id]
-#     tags = {
-#         Name = var.name
-#     }
-#     key_name = "maksaud-eng54"
+#Launching the db instance ready to be inserted
+resource "aws_instance" "db_instance" {
+    ami = var.db_ami
+    instance_type = "t2.micro"
+    associate_public_ip_address = false
+    subnet_id = aws_subnet.maksaud_private_subnet.id
+    vpc_security_group_ids = [aws_security_group.maksaud_db_security_group.id]
+    tags = {
+        Name = "${var.name}-db"
+    }
+    key_name = "maksaud-eng54"
 
-#     # connection {
-#     #     type = "ssh"
-#     #     user = "ubuntu"
-#     #     private_key = "${file("~/.ssh/maksaud-eng54.pem")}"
-#     #     host = self.public_ip
-#     # }
-# }
+    connection {
+        type = "ssh"
+        user = "ubuntu"
+        private_key = "${file("~/.ssh/maksaud-eng54.pem")}"
+        host = self.public_ip
+    }
+}
