@@ -1,60 +1,64 @@
 # DB tier
 
 resource "aws_subnet" "maksaud_private_subnet" {
-    vpc_id = var.vpc_id
-    cidr_block = "10.0.2.0/24"
-    availability_zone = "eu-west-1a"
+    vpc_id              = var.vpc_id
+    cidr_block          = "10.0.2.0/24"
+    availability_zone   = "eu-west-1a"
     tags = {
-        Name = "${var.name}-subnet"
+        Name            = "${var.name}-subnet"
     }
 }
 
+
+
 # Creating NACLs
 resource "aws_network_acl" "maksaud-eng54-private-nacl" {
-    vpc_id = var.vpc_id
+    vpc_id     = var.vpc_id
     subnet_ids = [aws_subnet.maksaud_private_subnet.id]
 
+
+    #To initially install mongod
+    # ingress {
+    #     protocol    = "tcp"
+    #     rule_no     = 100
+    #     action      = "allow"
+    #     cidr_block  = "0.0.0.0/0"
+    #     from_port   = 80
+    #     to_port     = 80
+    # }
+
+    # ingress {
+    #     protocol    = "tcp"
+    #     rule_no     = 110
+    #     action      = "allow"
+    #     cidr_block  = "0.0.0.0/0"
+    #     from_port   = 443
+    #     to_port     = 443
+    # }
+
     ingress {
-        protocol = "tcp"
-        rule_no = 100
-        action = "allow"
-        cidr_block = "0.0.0.0/0"
-        from_port = 80
-        to_port = 80
+        protocol    = "tcp"
+        rule_no     = 120
+        action      = "allow"
+        cidr_block  = "10.0.1.0/24"
+        from_port   = 27017
+        to_port     = 27017
     }
 
     ingress {
-        protocol = "tcp"
-        rule_no = 110
-        action = "allow"
-        cidr_block = "0.0.0.0/0"
-        from_port = 443
-        to_port = 443
-    }
-
-    ingress {
-        protocol = "tcp"
-        rule_no = 120
-        action = "allow"
-        cidr_block = "0.0.0.0/0"
-        from_port = 27017
-        to_port = 27017
-    }
-
-    ingress {
-        protocol = "tcp"
-        rule_no = 130
-        action = "allow"
-        cidr_block = "0.0.0.0/0"
-        from_port = 1024
-        to_port = 65535
+        protocol    = "tcp"
+        rule_no     = 130
+        action      = "allow"
+        cidr_block  = "10.0.1.0/24"
+        from_port   = 1024
+        to_port     = 65535
     }
 
     ingress {
         protocol = "tcp"
         rule_no = 140
         action = "allow"
-        cidr_block = "90.207.145.147/32" # Change to bastion
+        cidr_block = "10.0.1.0/24" # Change to bastion
         from_port = 22
         to_port = 22
     }
@@ -82,28 +86,28 @@ resource "aws_security_group" "maksaud_db_security_group" {
     description = "Allow port 80 inbound traffic"
     vpc_id      = var.vpc_id
 
-    ingress {
-    description = "port 80 from VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    }
+    # ingress {
+    # description = "port 80 from VPC"
+    # from_port   = 80
+    # to_port     = 80
+    # protocol    = "tcp"
+    # cidr_blocks = ["0.0.0.0/0"]
+    # }
 
-    ingress {
-    description = "port 80 from VPC"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    }
+    # ingress {
+    # description = "port 80 from VPC"
+    # from_port   = 443
+    # to_port     = 443
+    # protocol    = "tcp"
+    # cidr_blocks = ["0.0.0.0/0"]
+    # }
 
     ingress {
     description = "port 80 from VPC"
     from_port   = 27017
     to_port     = 27017
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.1.0/24"]
     }
 
     ingress {
@@ -111,7 +115,7 @@ resource "aws_security_group" "maksaud_db_security_group" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["90.207.145.147/32"] # Change to bastion
+    cidr_blocks = ["10.0.1.0/24"] # Change to bastion
     }
 
     egress {
@@ -137,7 +141,6 @@ resource "aws_route_table" "private-route" {
     tags = {
         Name = "${var.name}-public"
     }
-
 }
 
 resource "aws_route_table_association" "assoc" {
@@ -163,4 +166,9 @@ resource "aws_instance" "db_instance" {
         private_key = "${file("~/.ssh/maksaud-eng54.pem")}"
         host = self.public_ip
     }
+}
+
+
+output "instance_ip_addr" {
+    value = aws_instance.db_instance.private_ip
 }

@@ -84,6 +84,8 @@ resource "aws_security_group" "maksaud_security_group" {
     description = "Allow port 80 inbound traffic"
     vpc_id      = var.vpc_id
 
+
+# To initially install mongodb
     ingress {
     description = "port 80 from VPC"
     from_port   = 80
@@ -113,7 +115,15 @@ resource "aws_security_group" "maksaud_security_group" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["90.207.145.147/32"]
+    cidr_blocks = ["10.0.2.0/24"]
+    }
+
+    ingress {
+        description = "ethernal ports"
+        protocol = "tcp"
+        cidr_blocks = ["10.0.2.0/24"]
+        from_port = 1024
+        to_port = 65535
     }
 
     ingress {
@@ -159,6 +169,7 @@ data "template_file" "app_init" {
     template = "${file("./scripts/app/init.sh.tpl")}"
     vars = {
         my_name = "${var.name} is the real maksaud"
+        db_ip = var.db_ip
     }
         # setting ports
         # for mongo db, setting private_op for db host

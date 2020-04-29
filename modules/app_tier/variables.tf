@@ -10,6 +10,10 @@ variable "ami" {
     description = "The ami for the app"
 }
 
+variable "db_ip" {
+    description = "database variable"   
+}
+
 variable "internet_gateway" {
     description = "internet gateway"
 }

@@ -32,6 +32,7 @@ module "app" {
     vpc_id = aws_vpc.app_vpc.id
     name = var.name
     ami = var.ami
+    db_ip = module.db.instance_ip_addr
     internet_gateway = aws_internet_gateway.igw.id
 }
 
@@ -42,5 +43,3 @@ module "db" {
     db_ami = var.db_ami
     internet_gateway = aws_internet_gateway.igw.id
 }
-
-
